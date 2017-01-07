@@ -1,0 +1,11 @@
+[package]
+name = "chip8rs"
+version = "0.1.0"
+authors = ["carva"]
+
+[dependencies]
+rand = "*"
+piston_window = "0.59.0"
+
+[dependencies.pistoncore-sdl2_window]
+git = "https://github.com/PistonDevelopers/sdl2_window"
