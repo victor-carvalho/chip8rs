@@ -1,30 +1,31 @@
 chip8rs is my first hobby project written in [Rust](https://www.rust-lang.org).
 
-Build Instructions
-------------------
+# Requirements
 
-## Requirements
-
-### Rust
+## Rust
 
 I'm currently using Rust nightly 1.16. You can install with [rustup](https://www.rustup.rs/).
 
-### SDL2
+## SDL2
 
 You need SDL2 installed to run the emulator. Read the instructions [here](https://github.com/AngryLawyer/rust-sdl2#sdl20-development-libraries).
 
-### On Windows
+# Build Instructions
+
+## On Windows (MSVC)
 
 ```
 build.cmd
 target\release\chip8rs.exe roms\INVADERS
 ```
 
-### Linux, MacOS
+## Linux, MacOS
 
 ```
 cargo build --release
 cargo run --release roms/INVADERS
 ```
+
+This will run the INVADERS rom as the image below (Windows 10)
 
 ![windows_prt_sc](https://dl.dropboxusercontent.com/u/51598192/windows_prt_sc.png)
