@@ -2,7 +2,6 @@ extern crate rand;
 
 use rand::Rng;
 use std::fs::File;
-use std::io;
 use std::io::Read;
 
 use utils::*;

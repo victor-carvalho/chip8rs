@@ -48,7 +48,7 @@ fn main() {
                         }
                         chip8.draw_flag = false;
                     });
-                    window.window.swap_buffers();
+                    Window::swap_buffers(&mut window);
                 }
             },
             Event::Input(Input::Press(Button::Keyboard(key))) => match key {
