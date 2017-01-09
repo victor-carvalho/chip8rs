@@ -1,13 +1,25 @@
 extern crate rand;
-extern crate sdl2_window;
-extern crate piston_window;
+extern crate graphics;
+extern crate gfx_graphics;
+extern crate gfx;
+extern crate gfx_device_gl;
+extern crate input;
+extern crate window;
+extern crate glutin_window;
 
 mod chip8;
 mod utils;
 
+use gfx::traits::*;
+use gfx::memory::Typed;
+use gfx::format::{DepthStencil, Formatted, Srgba8};
+use input::{Button, Input};
+use window::{OpenGLWindow, Window, WindowSettings, Size};
+use glutin_window::{GlutinWindow, OpenGL};
+use gfx_graphics::{Gfx2d};
+use graphics::*;
+use std::process;
 use chip8::*;
-use piston_window::*;
-use sdl2_window::Sdl2Window;
 
 static BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 static WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
@@ -18,79 +30,78 @@ fn main() {
     if let Some(filename) = std::env::args().nth(1) {
         chip8.load(&filename);
     } else {
-        panic!("File not found!");
+        println!("File not found!");
+        process::exit(1);
     }
 
-    let mut window: PistonWindow<Sdl2Window> =
-        WindowSettings::new("CHIP-8", (640, 320))
-        .opengl(OpenGL::V4_4)
+    let opengl = OpenGL::V4_4;
+    let size = Size { width: 640, height: 320 };
+    let samples = 0;
+
+    let mut window: GlutinWindow =
+        WindowSettings::new("CHIP-8", size)
+        .opengl(opengl)
+        .samples(samples)
+        .resizable(false)
         .exit_on_esc(true)
-        .build()
-        .unwrap();
+        .build().unwrap();
+    
+    let draw_size = window.draw_size();
 
-    window.set_ups(300);
-    window.set_max_fps(300);
-    window.set_swap_buffers(false);
+    let (mut device, mut factory) =
+        gfx_device_gl::create(|s| window.get_proc_address(s) as *const _);
+    
+    let (output_color, output_stencil) = {
+        let aa = samples as gfx::texture::NumSamples;
+        let dim = (draw_size.width as u16, draw_size.height as u16, 1, aa.into());
+        let color_format = <Srgba8 as Formatted>::get_format();
+        let depth_format = <DepthStencil as Formatted>::get_format();
+        gfx_device_gl::create_main_targets_raw(dim, color_format.0, depth_format.0)
+    };
+    let output_color = Typed::new(output_color);
+    let output_stencil = Typed::new(output_stencil);
 
-    while let Some(e) = window.next() {
-        match e {
-            Event::Update(_) => chip8.emulate_cycle(),
-            Event::Render(_) => {
-                if chip8.draw_flag {
-                    window.draw_2d(&e, |c, g| {
-                        clear(BLACK, g);
-                        for y in 0..32 {
-                            for x in 0..64 {
-                                if chip8.gfx[x + y * 64] == 1 {
-                                    rectangle(WHITE, rectangle::square(x as f64 * 10.0, y as f64 * 10.0, 10.0), c.transform, g);
-                                }
-                            }
+    let mut encoder = factory.create_command_buffer().into();
+    let mut g2d = Gfx2d::new(opengl, &mut factory);
+
+    let viewport =
+        Viewport {
+            rect: [0, 0, draw_size.width as i32, draw_size.height as i32],
+            window_size: [size.width, size.height],
+            draw_size: [draw_size.width, draw_size.height],
+        };
+
+    loop {
+        if window.should_close() { process::exit(0); }
+        while let Some(e) = window.poll_event() {
+            match e {
+                Input::Press(Button::Keyboard(key)) => chip8.handle_button_press(key),
+                Input::Release(Button::Keyboard(key)) => chip8.handle_button_release(key),
+                Input::Close => process::exit(0),
+                _ => continue,
+            }
+        }
+        chip8.emulate_cycle();
+        if chip8.draw_flag {
+            g2d.draw(&mut encoder, &output_color, &output_stencil, viewport, |c, g| {
+                clear(BLACK, g);
+                for y in 0..32 {
+                    for x in 0..64 {
+                        if chip8.gfx[x + y * 64] == 1 {
+                            rectangle(
+                                WHITE, 
+                                rectangle::square(x as f64 * 10.0, y as f64 * 10.0, 10.0),
+                                c.transform,
+                                g);
                         }
-                        chip8.draw_flag = false;
-                    });
-                    Window::swap_buffers(&mut window);
+                    }
                 }
-            },
-            Event::Input(Input::Press(Button::Keyboard(key))) => match key {
-                Key::D1 => chip8.key[0x1] = 1,
-                Key::D2 => chip8.key[0x2] = 1,
-                Key::D3 => chip8.key[0x3] = 1,
-                Key::D4 => chip8.key[0xC] = 1,
-                Key::Q => chip8.key[0x4] = 1,
-                Key::W => chip8.key[0x5] = 1,
-                Key::E => chip8.key[0x6] = 1,
-                Key::R => chip8.key[0xD] = 1,
-                Key::A => chip8.key[0x7] = 1,
-                Key::S => chip8.key[0x8] = 1,
-                Key::D => chip8.key[0x9] = 1,
-                Key::F => chip8.key[0xE] = 1,
-                Key::Z => chip8.key[0xA] = 1,
-                Key::X => chip8.key[0x0] = 1,
-                Key::C => chip8.key[0xB] = 1,
-                Key::V => chip8.key[0xF] = 1,
-                _ => continue,
-            },
-            Event::Input(Input::Release(Button::Keyboard(key))) => match key {
-                Key::Space => chip8.debug = !chip8.debug,
-                Key::D1 => chip8.key[0x1] = 0,
-                Key::D2 => chip8.key[0x2] = 0,
-                Key::D3 => chip8.key[0x3] = 0,
-                Key::D4 => chip8.key[0xC] = 0,
-                Key::Q => chip8.key[0x4] = 0,
-                Key::W => chip8.key[0x5] = 0,
-                Key::E => chip8.key[0x6] = 0,
-                Key::R => chip8.key[0xD] = 0,
-                Key::A => chip8.key[0x7] = 0,
-                Key::S => chip8.key[0x8] = 0,
-                Key::D => chip8.key[0x9] = 0,
-                Key::F => chip8.key[0xE] = 0,
-                Key::Z => chip8.key[0xA] = 0,
-                Key::X => chip8.key[0x0] = 0,
-                Key::C => chip8.key[0xB] = 0,
-                Key::V => chip8.key[0xF] = 0,
-                _ => continue,
-            },
-            _ => continue,
+            });
+
+            encoder.flush(&mut device);
+            Window::swap_buffers(&mut window);
+            device.cleanup();
+            chip8.draw_flag = false;
         }
     }
 }

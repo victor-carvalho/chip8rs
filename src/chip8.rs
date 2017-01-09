@@ -1,5 +1,7 @@
 extern crate rand;
+extern crate input;
 
+use input::Key;
 use rand::Rng;
 use std::fs::File;
 use std::io::Read;
@@ -81,6 +83,50 @@ impl Chip8 {
     pub fn emulate_cycle(&mut self) {
         let opcode = self.fetch_opcode();
         self.handle_opcode(opcode);
+    }
+
+    pub fn handle_button_press(&mut self, key: Key) {
+        match key {
+            Key::D1 => self.key[0x1] = 1,
+            Key::D2 => self.key[0x2] = 1,
+            Key::D3 => self.key[0x3] = 1,
+            Key::D4 => self.key[0xC] = 1,
+            Key::Q => self.key[0x4] = 1,
+            Key::W => self.key[0x5] = 1,
+            Key::E => self.key[0x6] = 1,
+            Key::R => self.key[0xD] = 1,
+            Key::A => self.key[0x7] = 1,
+            Key::S => self.key[0x8] = 1,
+            Key::D => self.key[0x9] = 1,
+            Key::F => self.key[0xE] = 1,
+            Key::Z => self.key[0xA] = 1,
+            Key::X => self.key[0x0] = 1,
+            Key::C => self.key[0xB] = 1,
+            Key::V => self.key[0xF] = 1,
+            _ => {},
+        }
+    }
+
+    pub fn handle_button_release(&mut self, key: Key) {
+        match key {
+            Key::D1 => self.key[0x1] = 0,
+            Key::D2 => self.key[0x2] = 0,
+            Key::D3 => self.key[0x3] = 0,
+            Key::D4 => self.key[0xC] = 0,
+            Key::Q => self.key[0x4] = 0,
+            Key::W => self.key[0x5] = 0,
+            Key::E => self.key[0x6] = 0,
+            Key::R => self.key[0xD] = 0,
+            Key::A => self.key[0x7] = 0,
+            Key::S => self.key[0x8] = 0,
+            Key::D => self.key[0x9] = 0,
+            Key::F => self.key[0xE] = 0,
+            Key::Z => self.key[0xA] = 0,
+            Key::X => self.key[0x0] = 0,
+            Key::C => self.key[0xB] = 0,
+            Key::V => self.key[0xF] = 0,
+            _ => {},
+        }
     }
 
     #[inline(always)]

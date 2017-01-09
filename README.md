@@ -6,10 +6,6 @@ chip8rs is my first hobby project written in [Rust](https://www.rust-lang.org).
 
 I'm currently using Rust nightly 1.16. You can install with [rustup](https://www.rustup.rs/).
 
-## SDL2
-
-You need SDL2 installed to run the emulator. Read the instructions [here](https://github.com/AngryLawyer/rust-sdl2#sdl20-development-libraries).
-
 # Build Instructions
 
 ## On Windows (MSVC)
