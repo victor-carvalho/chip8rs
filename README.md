@@ -24,4 +24,4 @@ cargo run --release roms/INVADERS
 
 This will run the INVADERS rom as the image below (Windows 10)
 
-![windows_prt_sc](https://dl.dropboxusercontent.com/u/51598192/windows_prt_sc.png)
+![windows_prt_sc](https://photos-6.dropbox.com/t/2/AAAccGGzQ-NuFv_D79VlnJJ9XUpssfza8r84AHt7a0_99A/12/51598192/png/32x32/3/1505253600/0/2/windows_prt_sc.png/EIL03CcYmCcgAigC/ug_x7Ke08alhAFCt5epX1H6cqWK-vFnzgKH6y-P_zGU?dl=0&size=800x600&size_mode=3)
